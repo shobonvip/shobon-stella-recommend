@@ -501,7 +501,6 @@ def generate_bms_table(
 				rows.forEach(row => {
 					const lampCell = row.cells[4]; 
 					const lampValue = lampCell.getAttribute('data-value');
-					console.log(lampValue);
 					if (checkedLamps.includes(lampValue)) {
 						row.style.display = ""; 
 					} else {
