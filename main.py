@@ -186,6 +186,12 @@ def get_sorted_pp_data(average_list: List[float], score_list: List[dict], song_l
 		tmp = dict()
 		tmp["title"] = song["title"]
 		tmp["level"] = song["display_level"]
+		tmp["sha256"] = song["sha256"]
+		tmp["minbp"] = score["minbp"]
+		tmp["score_rate"] = score["score_rate"]
+		tmp["display_level"] = song["display_level"]
+		tmp["alpha"] = float(song["alpha"])
+		tmp["real_clear"] = score["clear"]
 
 		if clear_result == "Failed":
 			continue
@@ -212,22 +218,328 @@ def get_sorted_pp_data(average_list: List[float], score_list: List[dict], song_l
 	return ret
 
 
-def generate_bms_table(
+def generate_html_top100(
 	score_list: List[dict],
 	song_list: List[dict],
 	mode_slst: str,
-	filename = "result.html"
+	average_list: List[float],
+	estimated_theta: float,
+	filename_top100: str
 ):
+	dictLamp = {
+		"FullCombo": 8,
+		"ExHard": 7,
+		"Hard": 6,
+		"Clear": 5,
+		"Easy": 4,
+		"L-Assist": 3,
+		"Assist": 2,
+		"Failed": 1,
+		"No Play": "NaN",
+		"": "NaN"
+	}
 
-	average_list = get_average_list(song_list, mode_slst)
+	lamp_order = ["No Play", "Failed", "Assist", "L-Assist", "Easy", "Clear", "Hard", "ExHard", "FullCombo"]
+	lamp_filter_html = ""
+	
+	for lamp in lamp_order:
+		safe_lamp = html.escape(lamp)
+		lamp_filter_html += f"""
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="{dictLamp[safe_lamp]}" checked onchange="applyLampFilter()">
+				{safe_lamp}
+			</label>
+		"""
 
-	result = max_likelihood_estimation(score_list, song_list)
-	if not result.success:
-		raise RuntimeError(f"最尤推定に失敗しました. {result.message}")
 
-	estimated_theta = result.x
-	print(f"Estimated: {mode_slst}{beta_to_stella(average_list, estimated_theta):.2f}")
+	top100_list = get_sorted_pp_data(average_list, score_list, song_list, 100)
+	pp_sum = 0
+	pp_raw_sum = 0
+	for song in top100_list[::-1]:
+		pp_sum *= 0.97
+		pp_sum += song['pp']
+		pp_raw_sum += song['pp']
 
+
+	# Prefix Template
+	html_content = f"""
+	<!DOCTYPE html>
+	<html lang="ja">
+	<head>
+		<meta charset="UTF-8">
+		<title>Shobon Stella Recommend</title>
+		<style>
+			body {{ font-family: sans-serif; background-color: #222; color: #eee; padding: 20px; }}
+			
+			/* --- ランプフィルタエリア --- */
+			.filter-container {{
+				background-color: #333; padding: 10px 15px; border-radius: 5px;
+				margin-bottom: 15px; border: 1px solid #444;
+			}}
+			.filter-label {{ font-weight: bold; margin-right: 10px; font-size: 0.9em; color: #aaa; }}
+			.filter-item {{ 
+				display: inline-block; margin-right: 15px; cursor: pointer; user-select: none; font-weight: bold;
+			}}
+			.filter-buttons {{ margin-top: 5px; }}
+			.filter-buttons button {{
+				font-size: 0.8em; padding: 2px 8px; margin-right: 5px; cursor: pointer;
+				background: #555; color: #fff; border: 1px solid #666; border-radius: 3px;
+			}}
+			.filter-buttons button:hover {{ background: #666; }}
+			
+			/* テーブル装飾 */
+			table {{ width: 100%; border-collapse: collapse; margin-top: 10px; }}
+			th, td {{ padding: 10px; border-bottom: 1px solid #444; text-align: left; }}
+			th {{ background-color: #333; cursor: pointer; user-select: none; }}
+			th:hover {{ background-color: #555; }}
+			th::after {{ content: ' ⇅'; font-size: 0.8em; color: #888; }}
+			
+			/* ランプの色分け */
+			.lamp-fc {{ color: #55ffff; font-weight: bold; text-shadow: 0 0 5px #55ffff; }}
+			.lamp-exh {{ color: #ffff55; font-weight: bold; text-shadow: 0 0 5px #ffff55; }}
+			.lamp-hard {{ color: #ff5555; font-weight: bold; text-shadow: 0 0 5px #ff5555; }}
+			.lamp-clear {{ color: #ffbb55; font-weight: bold; text-shadow: 0 0 5px #ffbb55; }}
+			.lamp-easy {{ color: #55ff55; font-weight: bold; text-shadow: 0 0 5px #55ff55; }}
+			.lamp-assist {{ color: #ff55ff; font-weight: bold; text-shadow: 0 0 5px #ff55ff; }}
+			.lamp-failed {{ color: #cccccc; }}
+			.lamp-noplay {{ color: #666666; }}
+
+			a{{
+				text-decoration: none;
+				color: #eee;
+			}}
+		</style>
+	</head>
+	<body>
+		<h1>Shobon Stella Recommend - Performance Top 100</h1>
+		<h2><font color="#55ffff">{pp_sum:.0f}pp</font> (Raw: {pp_raw_sum:.0f}pp)</h2>
+		<h3></h3>
+
+		<div class="filter-container">
+			<div style="margin-bottom:5px;">
+				<span class="filter-label">Now Lamp:</span>
+				{lamp_filter_html}
+			</div>
+			<div class="filter-buttons">
+				<button onclick="toggleLampAll(true)">全選択</button>
+				<button onclick="toggleLampAll(false)">全解除</button>
+			</div>
+		</div>
+	"""
+
+	html_content += f"""
+	<div id="tab-content" class="tabcontent">
+		<table id="table">
+			<thead>
+				<tr>
+					<th onclick="sortTable(0, 'number')">順位</th>
+					<th onclick="sortTable(1, 'text')">タイトル</th>
+					<th onclick="sortTable(2, 'smart-number')">表</th>
+					<th onclick="sortTable(3, 'number')">ランプ</th>
+					<th onclick="sortTable(4, 'smart-number')">推定</th>
+					<th onclick="sortTable(5, 'number')">地力度</th>
+					<th onclick="sortTable(6, 'smart-number')">達成確率</th>
+					<th onclick="sortTable(7, 'smart-number')">pp</th>
+				</tr>
+			</thead>
+
+			<tbody>
+	"""
+
+	for ret_num, song in enumerate(top100_list):
+		ret_title = song["title"]
+		if len(ret_title) >= 50:
+			ret_title = ret_title[:47]+'...'
+		ret_title = html.escape(ret_title)
+		ret_sha256 = song["sha256"]
+
+
+		ret_jiriki = f"{float(song['alpha'])/2:.2f}"
+		ret_lamp = get_detailed_clear_type(int(song["real_clear"]))
+		ret_ok_lamp = song["clear"]
+		ret_dislv = song["display_level"]
+		ret_lv = -1
+		ret_pp = f"{song['pp']:.0f}pp"
+		ret_prob = -1
+		
+		if ret_ok_lamp == "Easy":
+			ret_prob = f"{prob_grm(estimated_theta, float(song['beta']), float(song['alpha'])) * 100:.2f} %"
+			ret_lv = f"{mode_slst}{beta_to_stella(average_list, float(song['beta'])):.2f}"
+		elif ret_ok_lamp == "Hard":
+			ret_prob = f"{prob_grm(estimated_theta, float(song['beta']), float(song['alpha'])) * 100:.2f} %"
+			ret_lv = f"{mode_slst}{beta_to_stella(average_list, float(song['beta'])):.2f}"
+		else:
+			assert(False)
+
+		ret_colorclass = ""
+
+		if ret_lamp == "No Play":
+			ret_colorclass = "lamp-noplay"
+		elif ret_lamp == "Failed":
+			ret_colorclass = "lamp-failed"
+		elif ret_lamp == "Assist":
+			ret_colorclass = "lamp-assist"
+		elif ret_lamp == "L-Assist":
+			ret_colorclass = "lamp-assist"
+		elif ret_lamp == "Easy":
+			ret_colorclass = "lamp-easy"
+		elif ret_lamp == "Clear":
+			ret_colorclass = "lamp-clear"
+		elif ret_lamp == "Hard":
+			ret_colorclass = "lamp-hard"
+		elif ret_lamp == "ExHard":
+			ret_colorclass = "lamp-exh"
+		elif ret_lamp == "FullCombo":
+			ret_colorclass = "lamp-fc"
+
+		ret_lampnum = dictLamp[ret_lamp]		
+
+		html_content += f"""
+				<tr class="chart-row">
+					<td data-value="{ret_num + 1}">
+						{ret_num + 1}
+					</td>
+					<td data-value="{ret_title}">
+						<a href="https://mocha-repository.info/song.php?sha256={ret_sha256}">{ret_title}</a>
+					</td>
+					<td data-value="{ret_dislv}">
+						{ret_dislv}
+					</td>
+					<td data-value="{ret_lampnum}" class="{ret_colorclass}">
+						{ret_lamp}
+					</td>
+					<td data-value="{ret_lv}">
+						{ret_lv}
+					</td>
+					<td data-value="{ret_jiriki}">
+						{ret_jiriki}
+					</td>
+					<td data-value="{ret_prob}">
+						{ret_prob}
+					</td>
+					<td data-value="{ret_pp}">
+						{ret_pp}
+					</td>
+				</tr>
+		"""
+		
+	html_content += "</tbody></table></div>"
+
+	# Suffix Template
+	html_content += """
+		<script>
+			function openTab(evt, tabId) {
+				var i, tabcontent, tablinks;
+				tabcontent = document.getElementsByClassName("tabcontent");
+				for (i = 0; i < tabcontent.length; i++) {
+					tabcontent[i].style.display = "none";
+				}
+				tablinks = document.getElementsByClassName("tablinks");
+				for (i = 0; i < tablinks.length; i++) {
+					tablinks[i].className = tablinks[i].className.replace(" active", "");
+				}
+				document.getElementById(tabId).style.display = "block";
+				evt.currentTarget.className += " active";
+			}
+		
+			function applyLampFilter() {
+				const checkboxes = document.querySelectorAll('.lamp-checkbox');
+				const checkedLamps = Array.from(checkboxes)
+										  .filter(cb => cb.checked)
+										  .map(cb => cb.value);
+
+				const rows = document.querySelectorAll('tr.chart-row');
+				
+				rows.forEach(row => {
+					const lampCell = row.cells[3]; 
+					const lampValue = lampCell.getAttribute('data-value');
+					if (checkedLamps.includes(lampValue)) {
+						row.style.display = ""; 
+					} else {
+						row.style.display = "none"; 
+					}
+				});
+			}
+
+			// 全選択/全解除ボタン
+			function toggleLampAll(checked) {
+				const checkboxes = document.querySelectorAll('.lamp-checkbox');
+				checkboxes.forEach(cb => cb.checked = checked);
+				applyLampFilter();
+			}
+
+			var sortState = {};
+
+			function extractNumber(str) {
+				if (!str) return NaN;
+				var cleaned = str.replace(/[^-0-9.]/g, '');
+				var num = parseFloat(cleaned);
+				return num;
+			}
+
+			function sortTable(col, type) {
+				var table = document.getElementById("table");
+				var tbody = table.tBodies[0];
+				var rows = Array.from(tbody.rows);
+
+				var dir = 'asc';
+				if (sortState && sortState.col === col && sortState.dir === 'asc') {
+					dir = 'desc';
+				}
+				sortState = { col: col, dir: dir };
+
+				function getSortValue(row) {
+					var val = row.cells[col].getAttribute("data-value");
+					var isEmpty = (val === null || val === undefined || val.trim() === "");
+					if (type === 'number' || type === 'smart-number') {
+						var num;
+						if (isEmpty) {
+							num = NaN;
+						} else if (type === 'smart-number') {
+							num = extractNumber(val);
+						} else {
+							num = parseFloat(val);
+						}
+						if (isNaN(num)) {
+							return dir === 'asc' ? Number.MAX_VALUE : -Number.MAX_VALUE;
+						}
+						return num;
+					} else {
+						if (isEmpty) return dir === 'asc' ? "\uFFFF" : ""; // 文字列のソートで最後尾に行くような文字
+						return val.toLowerCase();
+					}
+				}
+
+				// ソート実行
+				rows.sort(function(a, b) {
+					var valA = getSortValue(a);
+					var valB = getSortValue(b);
+
+					if (valA < valB) return dir === 'asc' ? -1 : 1;
+					if (valA > valB) return dir === 'asc' ? 1 : -1;
+					return 0;
+				});
+
+				tbody.append(...rows);
+			}
+		</script>
+	</body>
+	</html>
+	"""
+
+	with open(filename_top100, "w", encoding="utf-8") as f:
+		f.write(html_content)
+	print(f"ファイルを作成しました: {filename_top100}")
+	return
+
+def generate_html_table(
+	score_list: List[dict],
+	song_list: List[dict],
+	mode_slst: str,
+	average_list: List[float],
+	estimated_theta: float,
+	filename_table: str
+):
 	dictLamp = {
 		"FullCombo": 8,
 		"ExHard": 7,
@@ -319,6 +631,11 @@ def generate_bms_table(
 			.lamp-assist {{ color: #ff55ff; font-weight: bold; text-shadow: 0 0 5px #ff55ff; }}
 			.lamp-failed {{ color: #cccccc; }}
 			.lamp-noplay {{ color: #666666; }}
+
+			a{{
+				text-decoration: none;
+				color: #eee;
+			}}
 		</style>
 	</head>
 	<body>
@@ -387,6 +704,7 @@ def generate_bms_table(
 			if len(ret_title) >= 50:
 				ret_title = ret_title[:47]+'...'
 			ret_title = html.escape(ret_title)
+			ret_sha256 = song["sha256"]
 
 			ret_lvec = f"{mode_slst}{beta_to_stella(average_list, float(song['beta_easy'])):.2f}"
 			ret_lvhc = f"{mode_slst}{beta_to_stella(average_list, float(song['beta_hard'])):.2f}"
@@ -443,7 +761,7 @@ def generate_bms_table(
 			html_content += f"""
 					<tr class="chart-row">
 						<td data-value="{ret_title}">
-							{ret_title}
+							<a href="https://mocha-repository.info/song.php?sha256={ret_sha256}">{ret_title}</a>
 						</td>
 						<td data-value="{ret_lvec}">
 							{ret_lvec}
@@ -575,20 +893,37 @@ def generate_bms_table(
 	</html>
 	"""
 
-	with open(filename, "w", encoding="utf-8") as f:
+	with open(filename_table, "w", encoding="utf-8") as f:
 		f.write(html_content)
-	print(f"ファイルを作成しました: {filename}")
+	print(f"ファイルを作成しました: {filename_table}")
+	return
+
+
+def generate_html(
+	score_list: List[dict],
+	song_list: List[dict],
+	mode_slst: str,
+	filename_table = "result_table.html",
+	filename_top100 = "result_top100.html"
+):
+
+	average_list = get_average_list(song_list, mode_slst)
+
+	result = max_likelihood_estimation(score_list, song_list)
+	if not result.success:
+		raise RuntimeError(f"最尤推定に失敗しました. {result.message}")
+
+	estimated_theta = result.x
+	print(f"Estimated: {mode_slst}{beta_to_stella(average_list, estimated_theta):.2f}")
+
+	generate_html_table(score_list, song_list, mode_slst, average_list, estimated_theta, filename_table)
+	generate_html_top100(score_list, song_list, mode_slst, average_list, estimated_theta, filename_top100)
 
 mode_slst = 'sl'
 score_dir = "data/score.db"
 score_list = get_score_list(score_dir)
 song_dir = "data/sl_mocha.csv"
 song_list = get_song_list(song_dir)
+
 average_list = get_average_list(song_list, mode_slst)
-#print(average_list)
-
-pp_list = get_sorted_pp_data(average_list, score_list, song_list, 100)
-for num, song in enumerate(pp_list):
-	print(f"{num+1:>3}: {song['pp']:>4.0f}pp {song['clear']} {mode_slst}{beta_to_stella(average_list,song['beta']):>5.2f} {song['title']}")
-
-generate_bms_table(score_list, song_list, mode_slst)
+generate_html(score_list, song_list, mode_slst)
