@@ -4,11 +4,14 @@ Shobon Stella Recommend v1
 by Shobon
 
 """
-
+import os
+import tkinter as tk
+from tkinter import filedialog, messagebox, scrolledtext
 import sqlite3
 import csv
 import numpy as np
 import html
+import json
 from scipy.optimize import minimize_scalar
 from typing import List, Dict, Tuple
 
@@ -33,7 +36,7 @@ def get_score_list(directory: str) -> List[dict]:
 
 # mocha_sl/st.csv から情報を取得 
 def get_song_list(directory: str) -> List[dict]:
-	with open(directory) as file:
+	with open(directory, encoding='utf-8') as file:
 		reader = csv.reader(file)
 		row_name = ["title","display_level","md5","sha256","beta_easy","beta_hard","alpha","has_data"]
 		song_list = []
@@ -271,6 +274,29 @@ def generate_html_top100(
 		<style>
 			body {{ font-family: sans-serif; background-color: #222; color: #eee; padding: 20px; }}
 			
+			.header-container {{
+				display: flex;
+				justify-content: space-between; /* タイトルは左、ボタンは右に配置 */
+				align_items: center;
+				margin-bottom: 20px;
+				border-bottom: 1px solid #444;
+				padding-bottom: 10px;
+			}}
+			.nav-btn {{
+				background-color: #004488;
+				color: white;
+				padding: 10px 20px;
+				text-decoration: none;
+				border-radius: 5px;
+				font-weight: bold;
+				transition: background-color 0.3s;
+				box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+			}}
+			.nav-btn:hover {{
+				background-color: #003366;
+				transform: translateY(-1px);
+			}}			
+
 			/* --- ランプフィルタエリア --- */
 			.filter-container {{
 				background-color: #333; padding: 10px 15px; border-radius: 5px;
@@ -312,6 +338,7 @@ def generate_html_top100(
 	</head>
 	<body>
 		<h1>Shobon Stella Recommend - Performance Top 100</h1>
+		<a href="result_table.html" class="nav-btn">難易度表 ページへ ➜</a>
 		<h2><font color="#55ffff">{pp_sum:.0f}pp</font> (Raw: {pp_raw_sum:.0f}pp)</h2>
 		<h3></h3>
 
@@ -585,6 +612,29 @@ def generate_html_table(
 		<style>
 			body {{ font-family: sans-serif; background-color: #222; color: #eee; padding: 20px; }}
 			
+			.header-container {{
+				display: flex;
+				justify-content: space-between; /* タイトルは左、ボタンは右に配置 */
+				align_items: center;
+				margin-bottom: 20px;
+				border-bottom: 1px solid #444;
+				padding-bottom: 10px;
+			}}
+			.nav-btn {{
+				background-color: #004488;
+				color: white;
+				padding: 10px 20px;
+				text-decoration: none;
+				border-radius: 5px;
+				font-weight: bold;
+				transition: background-color 0.3s;
+				box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+			}}
+			.nav-btn:hover {{
+				background-color: #003366;
+				transform: translateY(-1px);
+			}}			
+
 			/* --- ランプフィルタエリア --- */
 			.filter-container {{
 				background-color: #333; padding: 10px 15px; border-radius: 5px;
@@ -640,6 +690,7 @@ def generate_html_table(
 	</head>
 	<body>
 		<h1>Shobon Stella Recommend</h1>
+		<a href="result_top100.html" class="nav-btn">TOP100 ページへ ➜</a>
 		<h2>あなたの推定実力: <font color="#55ffff">{mode_slst}{beta_to_stella(average_list, estimated_theta):.2f}</font></h2>
 
 		<div class="filter-container">
@@ -919,11 +970,119 @@ def generate_html(
 	generate_html_table(score_list, song_list, mode_slst, average_list, estimated_theta, filename_table)
 	generate_html_top100(score_list, song_list, mode_slst, average_list, estimated_theta, filename_top100)
 
-mode_slst = 'sl'
-score_dir = "data/score.db"
-score_list = get_score_list(score_dir)
-song_dir = "data/sl_mocha.csv"
-song_list = get_song_list(song_dir)
+class BMSApp:
+	def __init__(self, root):
+		self.root = root
+		self.root.title("Shobon Stella Recommend")
+		self.root.geometry("600x450")
+		self.config_file = "config.json"
 
-average_list = get_average_list(song_list, mode_slst)
-generate_html(score_list, song_list, mode_slst)
+		# --- DB選択 ---
+		tk.Label(root, text="1. score.db:").pack(anchor="w", padx=10, pady=(10, 0))
+		self.frame_db = tk.Frame(root)
+		self.frame_db.pack(fill="x", padx=10)
+		self.entry_db = tk.Entry(self.frame_db)
+		self.entry_db.pack(side="left", fill="x", expand=True)
+		tk.Button(self.frame_db, text="Browse", command=self.browse_db).pack(side="right", padx=5)
+		
+		# --- CSV選択 ---
+		tk.Label(root, text="2. sl_mocha.csv:").pack(anchor="w", padx=10, pady=(10, 0))
+		tk.Label(root, text="このソフトの data フォルダの中に入っています", font=("", 8), fg="gray").pack(anchor="w", padx=10)
+		self.frame_csv = tk.Frame(root)
+		self.frame_csv.pack(fill="x", padx=10)
+		self.entry_csv = tk.Entry(self.frame_csv)
+		self.entry_csv.pack(side="left", fill="x", expand=True)
+		tk.Button(self.frame_csv, text="Browse", command=self.browse_csv).pack(side="right", padx=5)
+
+		tk.Button(root, text="実行", command=self.run_process, bg="#ddddff", height=2).pack(pady=20, fill="x", padx=50)
+		
+		# --- ログ出力エリア ---
+		tk.Label(root, text="Log:").pack(anchor="w", padx=10)
+		self.log_area = scrolledtext.ScrolledText(root, height=10)
+		self.log_area.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+		self.load_config()
+
+	def log(self, message):
+		self.log_area.insert(tk.END, message + "\n")
+		self.log_area.see(tk.END)
+		self.root.update()
+
+	def load_config(self):
+		if os.path.exists(self.config_file):
+			try:
+				with open(self.config_file, "r", encoding="utf-8") as f:
+					config = json.load(f)
+					db_path = config.get("db_path", "")
+					csv_path = config.get("csv_path", "")
+					if db_path: self.entry_db.insert(0, db_path)
+					if csv_path: self.entry_csv.insert(0, csv_path)
+					self.log("設定ファイルを読み込みました。")
+			except:
+				self.log("設定ファイルの読み込みに失敗しました。")
+	
+	def save_config(self):
+		config = {
+			"db_path": self.entry_db.get(),
+			"csv_path": self.entry_csv.get()
+		}
+		try:
+			with open(self.config_file, "w", encoding="utf-8") as f:
+				json.dump(config, f)
+			self.log("設定ファイルを保存しました。")
+		except:
+			pass
+	
+	def browse_db(self):
+			filename = filedialog.askopenfilename(filetypes=[("SQLite DB", "*.db"), ("All Files", "*.*")])
+			if filename:
+				self.entry_db.delete(0, tk.END)
+				self.entry_db.insert(0, filename)
+				
+	def browse_csv(self):
+		filename = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")])
+		if filename:
+			self.entry_csv.delete(0, tk.END)
+			self.entry_csv.insert(0, filename)
+	
+	def run_process(self):
+		mode_slst = 'sl'
+		score_dir = self.entry_db.get()
+		song_dir = self.entry_csv.get()
+
+		if not os.path.exists(score_dir) or not os.path.exists(song_dir):
+			messagebox.showerror("Error", "ファイルが見つかりません。パスを確認してください。")
+			return
+		
+		self.save_config()
+		
+		try:
+			self.log("--- 処理開始 ---")
+
+			self.log("DBを読み込んでいます...")
+			score_list = get_score_list(score_dir)
+			self.log(f"DB読み込み完了: {len(score_list)} 件のスコアデータ")
+
+			self.log("CSVを解析しています...")
+			song_list = get_song_list(song_dir)
+			self.log(f"CSV解析完了: 全 {len(song_list)} 曲")
+
+			generate_html(score_list, song_list, mode_slst)
+			
+			self.log(f"完了！")
+			messagebox.showinfo("Success", f"HTMLを作成しました！")
+			
+			import webbrowser
+			webbrowser.open("result_table.html")
+
+			self.root.destroy()
+
+		except Exception as e:
+			import traceback
+			err_msg = traceback.format_exc()
+			self.log("エラーが発生しました:\n" + err_msg)
+			messagebox.showerror("Error", f"エラーが発生しました:\n{e}")
+if __name__ == "__main__":
+	root = tk.Tk()
+	app = BMSApp(root)
+	root.mainloop()
