@@ -1,6 +1,6 @@
 """
 
-Shobon Stella Recommend v1
+Shobon Stella Recommend v1.1
 by Shobon
 
 """
@@ -31,7 +31,21 @@ def get_score_list(directory: str) -> List[dict]:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM score")
 		score_tables = cur.fetchall()
-		score_list = [refine_score_data(dict(score_row)) for score_row in score_tables]
+		score_list = []
+		score_map = dict()
+		for score_row in score_tables:
+			dat = refine_score_data(dict(score_row))
+			if score_row['sha256'] not in score_map:
+				score_map[score_row['sha256']] = dat
+			else:
+				score_map[score_row['sha256']]['clear']\
+					= str(max(int(score_map[score_row['sha256']]['clear']), int(dat['clear'])))
+				score_map[score_row['sha256']]['minbp']\
+					= str(min(int(score_map[score_row['sha256']]['minbp']), int(dat['minbp'])))
+				score_map[score_row['sha256']]['score_rate']\
+					= str(max(float(score_map[score_row['sha256']]['score_rate']), float(dat['score_rate'])))				
+		for sha256, dat in score_map.items():
+			score_list.append(dat)
 		return score_list
 
 # mocha_sl/st.csv から情報を取得 
@@ -218,6 +232,8 @@ def get_sorted_pp_data(average_list: List[float], score_list: List[dict], song_l
 	ret.sort(key = lambda x: -x["pp"])
 	if len(ret) > max_num:
 		ret = ret[:max_num]
+	
+	print(*ret, sep='\n')
 	return ret
 
 
@@ -973,7 +989,7 @@ def generate_html(
 class BMSApp:
 	def __init__(self, root):
 		self.root = root
-		self.root.title("Shobon Stella Recommend")
+		self.root.title("Shobon Stella Recommend v1.1")
 		self.root.geometry("600x450")
 		self.config_file = "config.json"
 

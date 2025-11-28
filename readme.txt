@@ -1,4 +1,4 @@
-Shobon Stella Recommend v1
+Shobon Stella Recommend v1.1
 s#vip
 
 現時点では satellite しか対応してません
@@ -11,3 +11,5 @@ st_mocha.csv　を選ぶとバグるのでご注意！
 main.exe と main.py は全く同じですが main.exe は pythonの環境がなくても実行できます
 
 2025/11/28 v1
+2025/11/29 v1.1
+- 重複スコアデータの処理を追加 (複数あった場合, score/minbp/クリアランプのそれぞれについて、複数データの中で最大/最小/最良のものが採用されます)

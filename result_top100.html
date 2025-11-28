@@ -1,0 +1,2949 @@
+
+	<!DOCTYPE html>
+	<html lang="ja">
+	<head>
+		<meta charset="UTF-8">
+		<title>Shobon Stella Recommend</title>
+		<style>
+			body { font-family: sans-serif; background-color: #222; color: #eee; padding: 20px; }
+			
+			.header-container {
+				display: flex;
+				justify-content: space-between; /* タイトルは左、ボタンは右に配置 */
+				align_items: center;
+				margin-bottom: 20px;
+				border-bottom: 1px solid #444;
+				padding-bottom: 10px;
+			}
+			.nav-btn {
+				background-color: #004488;
+				color: white;
+				padding: 10px 20px;
+				text-decoration: none;
+				border-radius: 5px;
+				font-weight: bold;
+				transition: background-color 0.3s;
+				box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+			}
+			.nav-btn:hover {
+				background-color: #003366;
+				transform: translateY(-1px);
+			}			
+
+			/* --- ランプフィルタエリア --- */
+			.filter-container {
+				background-color: #333; padding: 10px 15px; border-radius: 5px;
+				margin-bottom: 15px; border: 1px solid #444;
+			}
+			.filter-label { font-weight: bold; margin-right: 10px; font-size: 0.9em; color: #aaa; }
+			.filter-item { 
+				display: inline-block; margin-right: 15px; cursor: pointer; user-select: none; font-weight: bold;
+			}
+			.filter-buttons { margin-top: 5px; }
+			.filter-buttons button {
+				font-size: 0.8em; padding: 2px 8px; margin-right: 5px; cursor: pointer;
+				background: #555; color: #fff; border: 1px solid #666; border-radius: 3px;
+			}
+			.filter-buttons button:hover { background: #666; }
+			
+			/* テーブル装飾 */
+			table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+			th, td { padding: 10px; border-bottom: 1px solid #444; text-align: left; }
+			th { background-color: #333; cursor: pointer; user-select: none; }
+			th:hover { background-color: #555; }
+			th::after { content: ' ⇅'; font-size: 0.8em; color: #888; }
+			
+			/* ランプの色分け */
+			.lamp-fc { color: #55ffff; font-weight: bold; text-shadow: 0 0 5px #55ffff; }
+			.lamp-exh { color: #ffff55; font-weight: bold; text-shadow: 0 0 5px #ffff55; }
+			.lamp-hard { color: #ff5555; font-weight: bold; text-shadow: 0 0 5px #ff5555; }
+			.lamp-clear { color: #ffbb55; font-weight: bold; text-shadow: 0 0 5px #ffbb55; }
+			.lamp-easy { color: #55ff55; font-weight: bold; text-shadow: 0 0 5px #55ff55; }
+			.lamp-assist { color: #ff55ff; font-weight: bold; text-shadow: 0 0 5px #ff55ff; }
+			.lamp-failed { color: #cccccc; }
+			.lamp-noplay { color: #666666; }
+
+			a{
+				text-decoration: none;
+				color: #eee;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Shobon Stella Recommend - Performance Top 100</h1>
+		<a href="result_table.html" class="nav-btn">難易度表 ページへ ➜</a>
+		<h2><font color="#55ffff">3651pp</font> (Raw: 10696pp)</h2>
+		<h3></h3>
+
+		<div class="filter-container">
+			<div style="margin-bottom:5px;">
+				<span class="filter-label">Now Lamp:</span>
+				
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="NaN" checked onchange="applyLampFilter()">
+				No Play
+			</label>
+		
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="1" checked onchange="applyLampFilter()">
+				Failed
+			</label>
+		
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="2" checked onchange="applyLampFilter()">
+				Assist
+			</label>
+		
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="3" checked onchange="applyLampFilter()">
+				L-Assist
+			</label>
+		
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="4" checked onchange="applyLampFilter()">
+				Easy
+			</label>
+		
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="5" checked onchange="applyLampFilter()">
+				Clear
+			</label>
+		
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="6" checked onchange="applyLampFilter()">
+				Hard
+			</label>
+		
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="7" checked onchange="applyLampFilter()">
+				ExHard
+			</label>
+		
+			<label class="filter-item">
+				<input type="checkbox" class="lamp-checkbox" value="8" checked onchange="applyLampFilter()">
+				FullCombo
+			</label>
+		
+			</div>
+			<div class="filter-buttons">
+				<button onclick="toggleLampAll(true)">全選択</button>
+				<button onclick="toggleLampAll(false)">全解除</button>
+			</div>
+		</div>
+	
+	<div id="tab-content" class="tabcontent">
+		<table id="table">
+			<thead>
+				<tr>
+					<th onclick="sortTable(0, 'number')">順位</th>
+					<th onclick="sortTable(1, 'text')">タイトル</th>
+					<th onclick="sortTable(2, 'smart-number')">表</th>
+					<th onclick="sortTable(3, 'number')">ランプ</th>
+					<th onclick="sortTable(4, 'smart-number')">推定</th>
+					<th onclick="sortTable(5, 'number')">地力度</th>
+					<th onclick="sortTable(6, 'smart-number')">達成確率</th>
+					<th onclick="sortTable(7, 'smart-number')">pp</th>
+				</tr>
+			</thead>
+
+			<tbody>
+	
+				<tr class="chart-row">
+					<td data-value="1">
+						1
+					</td>
+					<td data-value="ハロウィン・ナイト [another]">
+						<a href="https://mocha-repository.info/song.php?sha256=e170352d0bcbded500a020c1338ccfd5a825721507fbe5850cd091b7fc846756">ハロウィン・ナイト [another]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.76">
+						sl1.76
+					</td>
+					<td data-value="1.47">
+						1.47
+					</td>
+					<td data-value="15.82 %">
+						15.82 %
+					</td>
+					<td data-value="151pp">
+						151pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="2">
+						2
+					</td>
+					<td data-value="Celeste [Atlantis]">
+						<a href="https://mocha-repository.info/song.php?sha256=98de6a235c019f0e57a84f37b19ebcb85efe4842acf86c65a175bc7a625bd3bb">Celeste [Atlantis]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.34">
+						sl1.34
+					</td>
+					<td data-value="1.07">
+						1.07
+					</td>
+					<td data-value="29.86 %">
+						29.86 %
+					</td>
+					<td data-value="134pp">
+						134pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="3">
+						3
+					</td>
+					<td data-value="EUROBEATアイドル橘花音のテーマ">
+						<a href="https://mocha-repository.info/song.php?sha256=03865775db93c8e4f2fc9b867576df98597513bf65c9880b9c6ad881ffdf705f">EUROBEATアイドル橘花音のテーマ</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.33">
+						sl1.33
+					</td>
+					<td data-value="1.30">
+						1.30
+					</td>
+					<td data-value="26.33 %">
+						26.33 %
+					</td>
+					<td data-value="133pp">
+						133pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="4">
+						4
+					</td>
+					<td data-value="FAKE LIFE">
+						<a href="https://mocha-repository.info/song.php?sha256=7cac12496a0171a29fb871867dc56688017cd620cb25f1693c42dee408e058b7">FAKE LIFE</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.25">
+						sl1.25
+					</td>
+					<td data-value="1.30">
+						1.30
+					</td>
+					<td data-value="27.99 %">
+						27.99 %
+					</td>
+					<td data-value="130pp">
+						130pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="5">
+						5
+					</td>
+					<td data-value="Experience of Ecstasy [SP ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=21b179398535fff01d87935ec8c8139588da0a34c2213924ee8a6eb31bf83e88">Experience of Ecstasy [SP ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.23">
+						sl1.23
+					</td>
+					<td data-value="2.21">
+						2.21
+					</td>
+					<td data-value="17.37 %">
+						17.37 %
+					</td>
+					<td data-value="129pp">
+						129pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="6">
+						6
+					</td>
+					<td data-value="A D D i c T i O N 4 5 0 0 0 0 0 (H)">
+						<a href="https://mocha-repository.info/song.php?sha256=090d94bf516ed49c90b55697d4fbc711b36188c1c0c3adfc560bcddb8509d7ce">A D D i c T i O N 4 5 0 0 0 0 0 (H)</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.09">
+						sl1.09
+					</td>
+					<td data-value="0.90">
+						0.90
+					</td>
+					<td data-value="36.87 %">
+						36.87 %
+					</td>
+					<td data-value="124pp">
+						124pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="7">
+						7
+					</td>
+					<td data-value="LOE4 Another">
+						<a href="https://mocha-repository.info/song.php?sha256=80e56b591b47319100a2953fedfd1650bb66d758004bf23f05f895de5394867b">LOE4 Another</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.09">
+						sl1.09
+					</td>
+					<td data-value="1.25">
+						1.25
+					</td>
+					<td data-value="32.21 %">
+						32.21 %
+					</td>
+					<td data-value="124pp">
+						124pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="8">
+						8
+					</td>
+					<td data-value="subconsciousness [Freud]">
+						<a href="https://mocha-repository.info/song.php?sha256=3e3d4eb635573bfcd1fdec9f6d82b8065d9d01804cc0d6113464370814e4048d">subconsciousness [Freud]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.08">
+						sl1.08
+					</td>
+					<td data-value="1.14">
+						1.14
+					</td>
+					<td data-value="33.81 %">
+						33.81 %
+					</td>
+					<td data-value="123pp">
+						123pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="9">
+						9
+					</td>
+					<td data-value="Sky is the Limit [Max]">
+						<a href="https://mocha-repository.info/song.php?sha256=3a3d7ec600a76cb42689336a214a30d2fbf041430870ea7b4f77f65e1ea8ab1d">Sky is the Limit [Max]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl1.04">
+						sl1.04
+					</td>
+					<td data-value="2.01">
+						2.01
+					</td>
+					<td data-value="24.62 %">
+						24.62 %
+					</td>
+					<td data-value="122pp">
+						122pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="10">
+						10
+					</td>
+					<td data-value="Fatal Function (ANOTHER)">
+						<a href="https://mocha-repository.info/song.php?sha256=b64b663f0b597b927a56f9d053d0f64caed55aa7b3787ff4146f8ea8010eacf2">Fatal Function (ANOTHER)</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.04">
+						sl1.04
+					</td>
+					<td data-value="0.97">
+						0.97
+					</td>
+					<td data-value="36.91 %">
+						36.91 %
+					</td>
+					<td data-value="122pp">
+						122pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="11">
+						11
+					</td>
+					<td data-value="村 [ENT]">
+						<a href="https://mocha-repository.info/song.php?sha256=4143f8eafdc7e10b547dd63a3810f9033b2f950b6c1dae01fa1d3649c5649ebf">村 [ENT]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.02">
+						sl1.02
+					</td>
+					<td data-value="1.32">
+						1.32
+					</td>
+					<td data-value="32.90 %">
+						32.90 %
+					</td>
+					<td data-value="121pp">
+						121pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="12">
+						12
+					</td>
+					<td data-value="z/e">
+						<a href="https://mocha-repository.info/song.php?sha256=f3a5ba126e3a508434d9ca3b96dd250f25d5415171efb05c070f67dcd979bbc9">z/e</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl1.01">
+						sl1.01
+					</td>
+					<td data-value="1.29">
+						1.29
+					</td>
+					<td data-value="33.51 %">
+						33.51 %
+					</td>
+					<td data-value="120pp">
+						120pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="13">
+						13
+					</td>
+					<td data-value="The World of Cyber [SP INSANE]">
+						<a href="https://mocha-repository.info/song.php?sha256=e378b3c56f1c193b81db3229672104ccec04afc3e55f734d64edab861be16445">The World of Cyber [SP INSANE]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.99">
+						sl0.99
+					</td>
+					<td data-value="1.45">
+						1.45
+					</td>
+					<td data-value="32.54 %">
+						32.54 %
+					</td>
+					<td data-value="119pp">
+						119pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="14">
+						14
+					</td>
+					<td data-value="Can U Feel It [Another]">
+						<a href="https://mocha-repository.info/song.php?sha256=7e29a95c8649ada9ad4782b14f7e14e82c36915f8725d54f1643f575d38e6e30">Can U Feel It [Another]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.97">
+						sl0.97
+					</td>
+					<td data-value="2.29">
+						2.29
+					</td>
+					<td data-value="25.33 %">
+						25.33 %
+					</td>
+					<td data-value="119pp">
+						119pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="15">
+						15
+					</td>
+					<td data-value="Chimes [7key Extra]">
+						<a href="https://mocha-repository.info/song.php?sha256=90b2067d697355aa5660e87f45103b563e47af228814d87efc6d5c26c4df6080">Chimes [7key Extra]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.96">
+						sl0.96
+					</td>
+					<td data-value="2.38">
+						2.38
+					</td>
+					<td data-value="24.80 %">
+						24.80 %
+					</td>
+					<td data-value="118pp">
+						118pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="16">
+						16
+					</td>
+					<td data-value="nightclub (maniac7)">
+						<a href="https://mocha-repository.info/song.php?sha256=b7aab56cd69a334b7fb2f1797974a00eda3478f794f8f919394f74a2c69bb1bb">nightclub (maniac7)</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.93">
+						sl0.93
+					</td>
+					<td data-value="1.89">
+						1.89
+					</td>
+					<td data-value="31.07 %">
+						31.07 %
+					</td>
+					<td data-value="117pp">
+						117pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="17">
+						17
+					</td>
+					<td data-value="浮世絵横丁">
+						<a href="https://mocha-repository.info/song.php?sha256=5eabeda57a1d8fe902ace827c08652e4f09d7bf7356848b5f674b0adb50d667d">浮世絵横丁</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.91">
+						sl0.91
+					</td>
+					<td data-value="1.36">
+						1.36
+					</td>
+					<td data-value="37.27 %">
+						37.27 %
+					</td>
+					<td data-value="116pp">
+						116pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="18">
+						18
+					</td>
+					<td data-value="Suffering of screw [BlackAnother]">
+						<a href="https://mocha-repository.info/song.php?sha256=f5aab3ce442a9ba54eb2ae5cb6f9d267686afac813b799a3b606265e71ffadba">Suffering of screw [BlackAnother]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.89">
+						sl0.89
+					</td>
+					<td data-value="2.17">
+						2.17
+					</td>
+					<td data-value="31.73 %">
+						31.73 %
+					</td>
+					<td data-value="115pp">
+						115pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="19">
+						19
+					</td>
+					<td data-value="せんせーしょん！ [W]">
+						<a href="https://mocha-repository.info/song.php?sha256=50f3a9aa358b44089ba2ea0280fa0232cc9bab3e3efd1727b64b0eec70118c51">せんせーしょん！ [W]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.88">
+						sl0.88
+					</td>
+					<td data-value="3.79">
+						3.79
+					</td>
+					<td data-value="21.51 %">
+						21.51 %
+					</td>
+					<td data-value="115pp">
+						115pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="20">
+						20
+					</td>
+					<td data-value="雪月風花 ～Silver Moon -Hard-">
+						<a href="https://mocha-repository.info/song.php?sha256=62b1aefb7e3311312f097adb8b4267cc10ad527d094844611ae5931704e705a7">雪月風花 ～Silver Moon -Hard-</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.87">
+						sl0.87
+					</td>
+					<td data-value="1.57">
+						1.57
+					</td>
+					<td data-value="37.26 %">
+						37.26 %
+					</td>
+					<td data-value="115pp">
+						115pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="21">
+						21
+					</td>
+					<td data-value="&quot;Fresco&quot; [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=9d91220250962fc64006b2eb5f3bd642361c721e904708701ea43a562f80d89b">&quot;Fresco&quot; [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.83">
+						sl0.83
+					</td>
+					<td data-value="1.25">
+						1.25
+					</td>
+					<td data-value="41.49 %">
+						41.49 %
+					</td>
+					<td data-value="113pp">
+						113pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="22">
+						22
+					</td>
+					<td data-value="喋喋喃喃 [MiKather]">
+						<a href="https://mocha-repository.info/song.php?sha256=4503b1e5b2d08b619294528b2611b045daf811352fc7c777f1372eb3769cb0df">喋喋喃喃 [MiKather]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.82">
+						sl0.82
+					</td>
+					<td data-value="2.04">
+						2.04
+					</td>
+					<td data-value="36.95 %">
+						36.95 %
+					</td>
+					<td data-value="113pp">
+						113pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="23">
+						23
+					</td>
+					<td data-value="lightsphere -ほしをみるひと-">
+						<a href="https://mocha-repository.info/song.php?sha256=9c9bcf97498f190a3ac254e8d0c8731f268f9d6fefa9c54b2280f8847cbfc14c">lightsphere -ほしをみるひと-</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.82">
+						sl0.82
+					</td>
+					<td data-value="1.70">
+						1.70
+					</td>
+					<td data-value="39.38 %">
+						39.38 %
+					</td>
+					<td data-value="113pp">
+						113pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="24">
+						24
+					</td>
+					<td data-value="追憶の森 -Voices of the Earth- [LakeFairy7]">
+						<a href="https://mocha-repository.info/song.php?sha256=50e7f3da209f3ea5bc246fd964d16b18b2179e015b71d6794b767155a8d37ac1">追憶の森 -Voices of the Earth- [LakeFairy7]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.82">
+						sl0.82
+					</td>
+					<td data-value="1.20">
+						1.20
+					</td>
+					<td data-value="42.66 %">
+						42.66 %
+					</td>
+					<td data-value="113pp">
+						113pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="25">
+						25
+					</td>
+					<td data-value="-終天- [BLACK ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=11d7215681d70544478a02348f3787ee1c427867447db12a404903a234c7ab5b">-終天- [BLACK ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.81">
+						sl0.81
+					</td>
+					<td data-value="0.95">
+						0.95
+					</td>
+					<td data-value="44.32 %">
+						44.32 %
+					</td>
+					<td data-value="112pp">
+						112pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="26">
+						26
+					</td>
+					<td data-value="☆ウィンドサンバランド☆ -ANOTHER-">
+						<a href="https://mocha-repository.info/song.php?sha256=ee6ce6da99b20e2463037d056e97b93fb6c90698c18bd004b86e37db660c4467">☆ウィンドサンバランド☆ -ANOTHER-</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.80">
+						sl0.80
+					</td>
+					<td data-value="1.69">
+						1.69
+					</td>
+					<td data-value="40.49 %">
+						40.49 %
+					</td>
+					<td data-value="112pp">
+						112pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="27">
+						27
+					</td>
+					<td data-value="not MAKURA [7K ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=076255b3dbdd63a39a76a4004fd89be25741617f35bdbb15ad923f5a8fb0f975">not MAKURA [7K ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.79">
+						sl0.79
+					</td>
+					<td data-value="1.07">
+						1.07
+					</td>
+					<td data-value="44.53 %">
+						44.53 %
+					</td>
+					<td data-value="111pp">
+						111pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="28">
+						28
+					</td>
+					<td data-value="PEACE BREAKER [HYPER]">
+						<a href="https://mocha-repository.info/song.php?sha256=fa0cfb3b9615200aa1474a954244e31c107eb84efc1b3adb6d67f073659b34cd">PEACE BREAKER [HYPER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.78">
+						sl0.78
+					</td>
+					<td data-value="1.46">
+						1.46
+					</td>
+					<td data-value="43.16 %">
+						43.16 %
+					</td>
+					<td data-value="111pp">
+						111pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="29">
+						29
+					</td>
+					<td data-value="Ashen Land [SP ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=ac8fe3f3def5602fd9fc80f06533ce0fcbbed8f8281a717994b704dac098c4a1">Ashen Land [SP ANOTHER]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.77">
+						sl0.77
+					</td>
+					<td data-value="1.50">
+						1.50
+					</td>
+					<td data-value="43.54 %">
+						43.54 %
+					</td>
+					<td data-value="111pp">
+						111pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="30">
+						30
+					</td>
+					<td data-value="Drift TAXI [7k Another]">
+						<a href="https://mocha-repository.info/song.php?sha256=963dacfde184ce036572ecb942701d664e293aa05ebae177be4623eb1e815c41">Drift TAXI [7k Another]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.74">
+						sl0.74
+					</td>
+					<td data-value="1.89">
+						1.89
+					</td>
+					<td data-value="43.37 %">
+						43.37 %
+					</td>
+					<td data-value="110pp">
+						110pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="31">
+						31
+					</td>
+					<td data-value="シミュラ・ラクラ [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=6100b6d931a211771761645ab1d3f228fcf2b3c2cf63458b41fdbf99393bb500">シミュラ・ラクラ [ANOTHER]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.73">
+						sl0.73
+					</td>
+					<td data-value="2.19">
+						2.19
+					</td>
+					<td data-value="43.40 %">
+						43.40 %
+					</td>
+					<td data-value="109pp">
+						109pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="32">
+						32
+					</td>
+					<td data-value="PHAZE UPPER [HONEZT]">
+						<a href="https://mocha-repository.info/song.php?sha256=44e4cf2f4d8a66470ab510e075476d16ff899eb0dba313b0ccf5225a8089083f">PHAZE UPPER [HONEZT]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.72">
+						sl0.72
+					</td>
+					<td data-value="1.73">
+						1.73
+					</td>
+					<td data-value="45.29 %">
+						45.29 %
+					</td>
+					<td data-value="109pp">
+						109pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="33">
+						33
+					</td>
+					<td data-value="ハイライト [SP ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=8b9e4311b6bbaac3967f18fc06f552d21a59fe250511f3b7e2e804c93afbd7bc">ハイライト [SP ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.71">
+						sl0.71
+					</td>
+					<td data-value="2.33">
+						2.33
+					</td>
+					<td data-value="44.58 %">
+						44.58 %
+					</td>
+					<td data-value="108pp">
+						108pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="34">
+						34
+					</td>
+					<td data-value="Crush Alcohol [SP ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=de0c6f707a53fad4660c6f8897b80363c82bd58fca54b5c5f9f84bb6dba739e7">Crush Alcohol [SP ANOTHER]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.70">
+						sl0.70
+					</td>
+					<td data-value="1.97">
+						1.97
+					</td>
+					<td data-value="46.00 %">
+						46.00 %
+					</td>
+					<td data-value="108pp">
+						108pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="35">
+						35
+					</td>
+					<td data-value="Thermal Expansion [Another]">
+						<a href="https://mocha-repository.info/song.php?sha256=8203fba35c82c30176e09a79bcbc8e42ef185fa07fac99d820acbec802930eba">Thermal Expansion [Another]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.69">
+						sl0.69
+					</td>
+					<td data-value="1.44">
+						1.44
+					</td>
+					<td data-value="47.64 %">
+						47.64 %
+					</td>
+					<td data-value="108pp">
+						108pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="36">
+						36
+					</td>
+					<td data-value="TURNDOWN [PIETHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=1b4c8ea067771358f19fb7b2e912b6ff8a043cc37a389041ca8431be5c1426d0">TURNDOWN [PIETHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.69">
+						sl0.69
+					</td>
+					<td data-value="1.32">
+						1.32
+					</td>
+					<td data-value="48.04 %">
+						48.04 %
+					</td>
+					<td data-value="108pp">
+						108pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="37">
+						37
+					</td>
+					<td data-value="(´0｀*)♪(≧Σ≦)♪(・ε・。)♪(￣∇￣；)♪（0∀0）=3♪o(･_･θ [SP A...">
+						<a href="https://mocha-repository.info/song.php?sha256=2f1c93a1fce2bc3f6854deca327102908c942ffa548e939fb5eedc30c7179183">(´0｀*)♪(≧Σ≦)♪(・ε・。)♪(￣∇￣；)♪（0∀0）=3♪o(･_･θ [SP A...</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="5" class="lamp-clear">
+						Clear
+					</td>
+					<td data-value="sl0.69">
+						sl0.69
+					</td>
+					<td data-value="1.86">
+						1.86
+					</td>
+					<td data-value="47.34 %">
+						47.34 %
+					</td>
+					<td data-value="107pp">
+						107pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="38">
+						38
+					</td>
+					<td data-value="Black Wings [Another]">
+						<a href="https://mocha-repository.info/song.php?sha256=cadc68a09b98884eb3e6ee6f126e33878f43a6ce5274126bc13cb68588a67fce">Black Wings [Another]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.68">
+						sl0.68
+					</td>
+					<td data-value="1.54">
+						1.54
+					</td>
+					<td data-value="47.94 %">
+						47.94 %
+					</td>
+					<td data-value="107pp">
+						107pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="39">
+						39
+					</td>
+					<td data-value="新 漢江水打令 [SP ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=68af0a534e89d31fefe94ef3ecb91f73fce5d1ced88323e91842a87bfe9039cd">新 漢江水打令 [SP ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.68">
+						sl0.68
+					</td>
+					<td data-value="1.73">
+						1.73
+					</td>
+					<td data-value="47.79 %">
+						47.79 %
+					</td>
+					<td data-value="107pp">
+						107pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="40">
+						40
+					</td>
+					<td data-value="the scenery [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=f76b8aa2fa0a4c504af2864a3ea5be9fd7522c33269502c36ce1d112d9024aab">the scenery [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.67">
+						sl0.67
+					</td>
+					<td data-value="0.95">
+						0.95
+					</td>
+					<td data-value="49.26 %">
+						49.26 %
+					</td>
+					<td data-value="107pp">
+						107pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="41">
+						41
+					</td>
+					<td data-value="XVOTO">
+						<a href="https://mocha-repository.info/song.php?sha256=95a0b692b6a93ac35f9d07aa3af3fbab59b0a0a26e5b4995cb3e244311419aad">XVOTO</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.65">
+						sl0.65
+					</td>
+					<td data-value="0.90">
+						0.90
+					</td>
+					<td data-value="49.88 %">
+						49.88 %
+					</td>
+					<td data-value="106pp">
+						106pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="42">
+						42
+					</td>
+					<td data-value="KRAKEN">
+						<a href="https://mocha-repository.info/song.php?sha256=a387d7655b820317da95f2254a73220aa48be6547246497c9a0d4f357c5b0893">KRAKEN</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.65">
+						sl0.65
+					</td>
+					<td data-value="1.38">
+						1.38
+					</td>
+					<td data-value="49.89 %">
+						49.89 %
+					</td>
+					<td data-value="106pp">
+						106pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="43">
+						43
+					</td>
+					<td data-value="Absolute Future [HYPER]">
+						<a href="https://mocha-repository.info/song.php?sha256=fa17c85bb2c6a55254de2cadc08e8828b41bc8e2a21712fbf0255f1a99e0229b">Absolute Future [HYPER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.65">
+						sl0.65
+					</td>
+					<td data-value="0.89">
+						0.89
+					</td>
+					<td data-value="50.02 %">
+						50.02 %
+					</td>
+					<td data-value="106pp">
+						106pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="44">
+						44
+					</td>
+					<td data-value="菖蒲日和">
+						<a href="https://mocha-repository.info/song.php?sha256=5496f75a38f57cb6589a32b2a3c792b93b7fdbc569b4b85a2edefe62f52bc445">菖蒲日和</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.63">
+						sl0.63
+					</td>
+					<td data-value="1.82">
+						1.82
+					</td>
+					<td data-value="51.30 %">
+						51.30 %
+					</td>
+					<td data-value="105pp">
+						105pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="45">
+						45
+					</td>
+					<td data-value="チョウの標本 [Practice]">
+						<a href="https://mocha-repository.info/song.php?sha256=e640363f82904d3a8cf89d9e6c1651125eb760cbdb2f4f9aa0fab9aa8fda8924">チョウの標本 [Practice]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.62">
+						sl0.62
+					</td>
+					<td data-value="2.16">
+						2.16
+					</td>
+					<td data-value="52.19 %">
+						52.19 %
+					</td>
+					<td data-value="105pp">
+						105pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="46">
+						46
+					</td>
+					<td data-value="Caffeine Overdose Girl [Another]">
+						<a href="https://mocha-repository.info/song.php?sha256=3101d144010f4d879b37da3cdb9647b0080bd0c15c5eb79f245bc340a0b41aeb">Caffeine Overdose Girl [Another]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.61">
+						sl0.61
+					</td>
+					<td data-value="1.34">
+						1.34
+					</td>
+					<td data-value="51.70 %">
+						51.70 %
+					</td>
+					<td data-value="105pp">
+						105pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="47">
+						47
+					</td>
+					<td data-value="GOODWORLD [A]">
+						<a href="https://mocha-repository.info/song.php?sha256=1477f8e564c7d087766346c4dd6d84090d39fe0db76660bf07a3161afd5d9538">GOODWORLD [A]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.60">
+						sl0.60
+					</td>
+					<td data-value="1.24">
+						1.24
+					</td>
+					<td data-value="52.20 %">
+						52.20 %
+					</td>
+					<td data-value="104pp">
+						104pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="48">
+						48
+					</td>
+					<td data-value="Schwerkraft [Planet]">
+						<a href="https://mocha-repository.info/song.php?sha256=5e459bfe5c5c8f49c921dbb58d12508e3a22dc51a1fee3912df63f1c739a96ee">Schwerkraft [Planet]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.59">
+						sl0.59
+					</td>
+					<td data-value="1.36">
+						1.36
+					</td>
+					<td data-value="52.73 %">
+						52.73 %
+					</td>
+					<td data-value="104pp">
+						104pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="49">
+						49
+					</td>
+					<td data-value="Re:Sound Sing Step -Another-">
+						<a href="https://mocha-repository.info/song.php?sha256=5225baa0e28c4afa31b06b132aa99128e2afc92b92f65cca28a8be5b84fbd18d">Re:Sound Sing Step -Another-</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.59">
+						sl0.59
+					</td>
+					<td data-value="0.93">
+						0.93
+					</td>
+					<td data-value="52.15 %">
+						52.15 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="50">
+						50
+					</td>
+					<td data-value="MEJIRUSHI">
+						<a href="https://mocha-repository.info/song.php?sha256=51b6d6277ed8e4170ff1b891617137374c0011ed57260af207beca7012519774">MEJIRUSHI</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.59">
+						sl0.59
+					</td>
+					<td data-value="0.96">
+						0.96
+					</td>
+					<td data-value="52.27 %">
+						52.27 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="51">
+						51
+					</td>
+					<td data-value="Aurora [ANOTHER7]">
+						<a href="https://mocha-repository.info/song.php?sha256=d252053e9604518194ccda618cc4b072f3fcae2911a0eaf715c12ab5a639a219">Aurora [ANOTHER7]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.59">
+						sl0.59
+					</td>
+					<td data-value="1.42">
+						1.42
+					</td>
+					<td data-value="53.36 %">
+						53.36 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="52">
+						52
+					</td>
+					<td data-value="Brand New Stories -ANOTHER-">
+						<a href="https://mocha-repository.info/song.php?sha256=150d1ef9c4102e7a1518a58c0a4a65cb98865171d629c436721700dba76589ea">Brand New Stories -ANOTHER-</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.58">
+						sl0.58
+					</td>
+					<td data-value="1.39">
+						1.39
+					</td>
+					<td data-value="53.36 %">
+						53.36 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="53">
+						53
+					</td>
+					<td data-value="Amethyst Moon [SP Another]">
+						<a href="https://mocha-repository.info/song.php?sha256=c04f1a406edff7288eda16c33770394c60973925750d434121ddb696e25d1dad">Amethyst Moon [SP Another]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.58">
+						sl0.58
+					</td>
+					<td data-value="1.20">
+						1.20
+					</td>
+					<td data-value="53.02 %">
+						53.02 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="54">
+						54
+					</td>
+					<td data-value="Lepontinia">
+						<a href="https://mocha-repository.info/song.php?sha256=a8913b44e7e39183599a5941d60d21ba1c7da65a1ab9ba87a8f4730b041e5c51">Lepontinia</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.58">
+						sl0.58
+					</td>
+					<td data-value="1.95">
+						1.95
+					</td>
+					<td data-value="55.27 %">
+						55.27 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="55">
+						55
+					</td>
+					<td data-value="DAYBREAK [ANOTHER7]">
+						<a href="https://mocha-repository.info/song.php?sha256=61ec1645f52cea0989b1db3cf14272509dfd3fc3980d86a75e2b03ec0a160148">DAYBREAK [ANOTHER7]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.57">
+						sl0.57
+					</td>
+					<td data-value="1.28">
+						1.28
+					</td>
+					<td data-value="53.72 %">
+						53.72 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="56">
+						56
+					</td>
+					<td data-value="焔 -HOMURA-">
+						<a href="https://mocha-repository.info/song.php?sha256=0bb6061840e5f1bf19ae88a2b430518a1060194f781bb8015d440782b241f759">焔 -HOMURA-</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.57">
+						sl0.57
+					</td>
+					<td data-value="1.20">
+						1.20
+					</td>
+					<td data-value="53.56 %">
+						53.56 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="57">
+						57
+					</td>
+					<td data-value="雪花">
+						<a href="https://mocha-repository.info/song.php?sha256=138712b04805ef65b2e6e7880e668f55be5843fbc0ed47281f527835ff829b18">雪花</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.57">
+						sl0.57
+					</td>
+					<td data-value="1.12">
+						1.12
+					</td>
+					<td data-value="53.33 %">
+						53.33 %
+					</td>
+					<td data-value="103pp">
+						103pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="58">
+						58
+					</td>
+					<td data-value="過日の呪いは少女の鎖 [Another]">
+						<a href="https://mocha-repository.info/song.php?sha256=6e8d71e9adb617ed1e46105d0628ba3710d4acd0a7d4b0672256dfc9cd60f25c">過日の呪いは少女の鎖 [Another]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.56">
+						sl0.56
+					</td>
+					<td data-value="1.00">
+						1.00
+					</td>
+					<td data-value="53.27 %">
+						53.27 %
+					</td>
+					<td data-value="102pp">
+						102pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="59">
+						59
+					</td>
+					<td data-value="カウガールとおもちゃの拳銃 [Another]">
+						<a href="https://mocha-repository.info/song.php?sha256=5805ca59ab675223e355c56a83bdc160527cfe5f982b29090c7bb633bec6bbbe">カウガールとおもちゃの拳銃 [Another]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.55">
+						sl0.55
+					</td>
+					<td data-value="0.95">
+						0.95
+					</td>
+					<td data-value="53.38 %">
+						53.38 %
+					</td>
+					<td data-value="102pp">
+						102pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="60">
+						60
+					</td>
+					<td data-value="last:wish (Another)">
+						<a href="https://mocha-repository.info/song.php?sha256=f5fd1aa2399ed0c5a8cb467d80e0ad32a94d9dd40ac2e8e78e7b2a7632541965">last:wish (Another)</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.55">
+						sl0.55
+					</td>
+					<td data-value="1.73">
+						1.73
+					</td>
+					<td data-value="56.16 %">
+						56.16 %
+					</td>
+					<td data-value="102pp">
+						102pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="61">
+						61
+					</td>
+					<td data-value="SpellBound [7KEYS ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=badb5e26812ab7652816f7c3963a4732418f9652d29cbc255d837fee4357ba4b">SpellBound [7KEYS ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.55">
+						sl0.55
+					</td>
+					<td data-value="1.10">
+						1.10
+					</td>
+					<td data-value="54.06 %">
+						54.06 %
+					</td>
+					<td data-value="102pp">
+						102pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="62">
+						62
+					</td>
+					<td data-value="Ceebu Yapp">
+						<a href="https://mocha-repository.info/song.php?sha256=86ece001bb4230749d9c9b66ce9c8c83d2ebd4369c08618abc2470ebe576a381">Ceebu Yapp</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.55">
+						sl0.55
+					</td>
+					<td data-value="2.28">
+						2.28
+					</td>
+					<td data-value="58.62 %">
+						58.62 %
+					</td>
+					<td data-value="102pp">
+						102pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="63">
+						63
+					</td>
+					<td data-value="ETERNAL DRAIN (ANOTHER)">
+						<a href="https://mocha-repository.info/song.php?sha256=d759746b01bc4cdfb4fe9541b6604fd35dfeb2d4b5e484a105134d35f36bcc99">ETERNAL DRAIN (ANOTHER)</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.54">
+						sl0.54
+					</td>
+					<td data-value="1.21">
+						1.21
+					</td>
+					<td data-value="54.80 %">
+						54.80 %
+					</td>
+					<td data-value="102pp">
+						102pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="64">
+						64
+					</td>
+					<td data-value="Abendo [Trioxide]">
+						<a href="https://mocha-repository.info/song.php?sha256=5bef852c3fbb524e4d1b709d998166c3ad62c31971b940df67f530497d545eb3">Abendo [Trioxide]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.54">
+						sl0.54
+					</td>
+					<td data-value="2.53">
+						2.53
+					</td>
+					<td data-value="60.38 %">
+						60.38 %
+					</td>
+					<td data-value="101pp">
+						101pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="65">
+						65
+					</td>
+					<td data-value="Brand-New Sky [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=6d03f4703d6bd089402e22d834c8abd3ed8536452c7080e31dba8d792f9a0245">Brand-New Sky [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.53">
+						sl0.53
+					</td>
+					<td data-value="0.99">
+						0.99
+					</td>
+					<td data-value="54.28 %">
+						54.28 %
+					</td>
+					<td data-value="101pp">
+						101pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="66">
+						66
+					</td>
+					<td data-value="STAR TRACK (NiraicA_nai Mix) [constellation]">
+						<a href="https://mocha-repository.info/song.php?sha256=1e16fbd498b20c0914f93a0a4a60282633c60c2fa58c9e7076ef25b5966ab4cb">STAR TRACK (NiraicA_nai Mix) [constellation]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.53">
+						sl0.53
+					</td>
+					<td data-value="1.46">
+						1.46
+					</td>
+					<td data-value="56.27 %">
+						56.27 %
+					</td>
+					<td data-value="101pp">
+						101pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="67">
+						67
+					</td>
+					<td data-value="Future MUSiC [rather]">
+						<a href="https://mocha-repository.info/song.php?sha256=df98731dcc0ec1a610f51af0b8afa37f079c21d8984ccc46b3001b9bcd00b581">Future MUSiC [rather]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.53">
+						sl0.53
+					</td>
+					<td data-value="1.54">
+						1.54
+					</td>
+					<td data-value="56.69 %">
+						56.69 %
+					</td>
+					<td data-value="101pp">
+						101pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="68">
+						68
+					</td>
+					<td data-value="Twin☆kle Galaxies [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=10888c7f50bdfea76b312c0d32dfc7152c22f8e56a48c9b8b958132433d31514">Twin☆kle Galaxies [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.53">
+						sl0.53
+					</td>
+					<td data-value="1.37">
+						1.37
+					</td>
+					<td data-value="56.07 %">
+						56.07 %
+					</td>
+					<td data-value="101pp">
+						101pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="69">
+						69
+					</td>
+					<td data-value="Edge of bravery [VENGEANCE]">
+						<a href="https://mocha-repository.info/song.php?sha256=6c80304f22e16b9927e72a9e1f05381c3072e03100b9d55f35c852e2366cc485">Edge of bravery [VENGEANCE]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.52">
+						sl0.52
+					</td>
+					<td data-value="1.34">
+						1.34
+					</td>
+					<td data-value="56.27 %">
+						56.27 %
+					</td>
+					<td data-value="101pp">
+						101pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="70">
+						70
+					</td>
+					<td data-value="Let&#x27;s get wild! [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=ff3e7af08ee176bfc3f1c2fc79ee4d6e3ba0a21c85c1f4d45a09aa851b2272f1">Let&#x27;s get wild! [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.52">
+						sl0.52
+					</td>
+					<td data-value="1.89">
+						1.89
+					</td>
+					<td data-value="58.91 %">
+						58.91 %
+					</td>
+					<td data-value="101pp">
+						101pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="71">
+						71
+					</td>
+					<td data-value="新いかBMSシRchHtりAnbkXyZしKKKKtTけどM早HamNsmL青白いSnPBpR...">
+						<a href="https://mocha-repository.info/song.php?sha256=3a724729f33b12a1dd82c8ef623274faa41a8e5b6ae022ddd3d6a33c06840814">新いかBMSシRchHtりAnbkXyZしKKKKtTけどM早HamNsmL青白いSnPBpR...</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.52">
+						sl0.52
+					</td>
+					<td data-value="1.53">
+						1.53
+					</td>
+					<td data-value="57.55 %">
+						57.55 %
+					</td>
+					<td data-value="101pp">
+						101pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="72">
+						72
+					</td>
+					<td data-value="カラフル・サウンズ・カッター [F]">
+						<a href="https://mocha-repository.info/song.php?sha256=d3b489e80f49c278f34f5d17cff76654f723c4759993267f6f7d2811c6359b58">カラフル・サウンズ・カッター [F]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.51">
+						sl0.51
+					</td>
+					<td data-value="1.40">
+						1.40
+					</td>
+					<td data-value="57.05 %">
+						57.05 %
+					</td>
+					<td data-value="100pp">
+						100pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="73">
+						73
+					</td>
+					<td data-value="Airetsiw [BlackAnother]">
+						<a href="https://mocha-repository.info/song.php?sha256=e0e7fd97b42178c2fbcb69754cebcd3e0fd1b5d24ba5b9716ca9341931a7be70">Airetsiw [BlackAnother]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.51">
+						sl0.51
+					</td>
+					<td data-value="0.88">
+						0.88
+					</td>
+					<td data-value="54.54 %">
+						54.54 %
+					</td>
+					<td data-value="100pp">
+						100pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="74">
+						74
+					</td>
+					<td data-value="じゃぱりぱー">
+						<a href="https://mocha-repository.info/song.php?sha256=615a4d246a161e113bd04848bb64581ba800ff1265468e4b522c21a2ae92c34b">じゃぱりぱー</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.51">
+						sl0.51
+					</td>
+					<td data-value="1.42">
+						1.42
+					</td>
+					<td data-value="57.44 %">
+						57.44 %
+					</td>
+					<td data-value="100pp">
+						100pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="75">
+						75
+					</td>
+					<td data-value="Memory of Paradise [INSANE]">
+						<a href="https://mocha-repository.info/song.php?sha256=ea9f0fe32de47b214cd02d953e2a36f71cabfee3fef9d06422e76274f962a185">Memory of Paradise [INSANE]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.50">
+						sl0.50
+					</td>
+					<td data-value="2.14">
+						2.14
+					</td>
+					<td data-value="61.28 %">
+						61.28 %
+					</td>
+					<td data-value="100pp">
+						100pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="76">
+						76
+					</td>
+					<td data-value="Beatrice [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=905e1f9992cb640bf79bcb8ff73ad02da3519092062eca387bae1f9723093615">Beatrice [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.50">
+						sl0.50
+					</td>
+					<td data-value="1.61">
+						1.61
+					</td>
+					<td data-value="58.92 %">
+						58.92 %
+					</td>
+					<td data-value="100pp">
+						100pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="77">
+						77
+					</td>
+					<td data-value="Removal [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=68e5ef6331b7376502efd8ac406b0a99b4ac9443776645d2a24ad9ae24f82a22">Removal [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.49">
+						sl0.49
+					</td>
+					<td data-value="1.50">
+						1.50
+					</td>
+					<td data-value="58.63 %">
+						58.63 %
+					</td>
+					<td data-value="100pp">
+						100pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="78">
+						78
+					</td>
+					<td data-value="Break Through The Barrier [HYPER]">
+						<a href="https://mocha-repository.info/song.php?sha256=ca105a6b956cae12a06e78c654bca9e9f2beaf250b790284958ce69af0e1714e">Break Through The Barrier [HYPER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.49">
+						sl0.49
+					</td>
+					<td data-value="1.12">
+						1.12
+					</td>
+					<td data-value="56.52 %">
+						56.52 %
+					</td>
+					<td data-value="100pp">
+						100pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="79">
+						79
+					</td>
+					<td data-value="False Friend [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=9ad6f3f0cd53e48ea2ec4a17848d1fba8b2c13805bec5859e2c0d5b5e6532b93">False Friend [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.49">
+						sl0.49
+					</td>
+					<td data-value="1.87">
+						1.87
+					</td>
+					<td data-value="61.14 %">
+						61.14 %
+					</td>
+					<td data-value="99pp">
+						99pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="80">
+						80
+					</td>
+					<td data-value="scualee [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=489cc31f28545b9cf063ec56d7bc7dcbdfa349f8323226874f77a571784c7bbe">scualee [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.48">
+						sl0.48
+					</td>
+					<td data-value="1.78">
+						1.78
+					</td>
+					<td data-value="60.91 %">
+						60.91 %
+					</td>
+					<td data-value="99pp">
+						99pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="81">
+						81
+					</td>
+					<td data-value="Wildcard">
+						<a href="https://mocha-repository.info/song.php?sha256=bdf92e24461023b38b1e127493b5ae8c54847062518ae1c76bc5d24e25710eba">Wildcard</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.46">
+						sl0.46
+					</td>
+					<td data-value="2.25">
+						2.25
+					</td>
+					<td data-value="64.98 %">
+						64.98 %
+					</td>
+					<td data-value="99pp">
+						99pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="82">
+						82
+					</td>
+					<td data-value="堕楽の園 [HYPER]">
+						<a href="https://mocha-repository.info/song.php?sha256=01cf9f1be77b9714f779e6fa802a9c9f69cda101c0593b73b2e174a55e57bf5d">堕楽の園 [HYPER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.46">
+						sl0.46
+					</td>
+					<td data-value="1.05">
+						1.05
+					</td>
+					<td data-value="57.23 %">
+						57.23 %
+					</td>
+					<td data-value="98pp">
+						98pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="83">
+						83
+					</td>
+					<td data-value="Fall Apart [SP INSANE]">
+						<a href="https://mocha-repository.info/song.php?sha256=857b0dcf2ef58f5f0bd46ebf2332d7b5124306a930bfd02850113ada06ef3b85">Fall Apart [SP INSANE]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.45">
+						sl0.45
+					</td>
+					<td data-value="1.70">
+						1.70
+					</td>
+					<td data-value="62.28 %">
+						62.28 %
+					</td>
+					<td data-value="98pp">
+						98pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="84">
+						84
+					</td>
+					<td data-value="Berry Go!! [ZOI-EZ]">
+						<a href="https://mocha-repository.info/song.php?sha256=e985cf7eb05dbaa81cceb6b5cd45c52b122bf8e957dd393963e3fd356860a2c2">Berry Go!! [ZOI-EZ]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.45">
+						sl0.45
+					</td>
+					<td data-value="1.28">
+						1.28
+					</td>
+					<td data-value="59.50 %">
+						59.50 %
+					</td>
+					<td data-value="98pp">
+						98pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="85">
+						85
+					</td>
+					<td data-value="FIRST PROMIZE [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=0ceb1c90a942d9245e946b23ec4a095a05419117ae1bd895ed60807bf0c79168">FIRST PROMIZE [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.45">
+						sl0.45
+					</td>
+					<td data-value="1.08">
+						1.08
+					</td>
+					<td data-value="58.07 %">
+						58.07 %
+					</td>
+					<td data-value="98pp">
+						98pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="86">
+						86
+					</td>
+					<td data-value="ice valley &quot;beyond the searoad&quot; [EXTRA]">
+						<a href="https://mocha-repository.info/song.php?sha256=5282e0bff3465beb3f10e78646b501908753a1becc3af53013923b61d427bc54">ice valley &quot;beyond the searoad&quot; [EXTRA]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="5" class="lamp-clear">
+						Clear
+					</td>
+					<td data-value="sl0.44">
+						sl0.44
+					</td>
+					<td data-value="1.45">
+						1.45
+					</td>
+					<td data-value="60.89 %">
+						60.89 %
+					</td>
+					<td data-value="98pp">
+						98pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="87">
+						87
+					</td>
+					<td data-value="Crystalline White [SP INSANE]">
+						<a href="https://mocha-repository.info/song.php?sha256=13ee19e716a7dcd5bec4d031800c545022d5f6fe742aaf8156e538f58d572c8b">Crystalline White [SP INSANE]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.44">
+						sl0.44
+					</td>
+					<td data-value="1.28">
+						1.28
+					</td>
+					<td data-value="59.72 %">
+						59.72 %
+					</td>
+					<td data-value="98pp">
+						98pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="88">
+						88
+					</td>
+					<td data-value="プナイプナイたいそう [SP ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=532a76cb5a42dfccb2fdabc06624c432dc930f1aa26a067e496818ae9d79dc36">プナイプナイたいそう [SP ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.44">
+						sl0.44
+					</td>
+					<td data-value="1.23">
+						1.23
+					</td>
+					<td data-value="59.57 %">
+						59.57 %
+					</td>
+					<td data-value="97pp">
+						97pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="89">
+						89
+					</td>
+					<td data-value="Wonderful Tomorrow [WONDER]">
+						<a href="https://mocha-repository.info/song.php?sha256=f4be11d3bb50025ad58789708da19d8783b1ef21dea043bcb60951cc66ffc6d5">Wonderful Tomorrow [WONDER]</a>
+					</td>
+					<td data-value="sl1">
+						sl1
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.44">
+						sl0.44
+					</td>
+					<td data-value="2.30">
+						2.30
+					</td>
+					<td data-value="67.46 %">
+						67.46 %
+					</td>
+					<td data-value="97pp">
+						97pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="90">
+						90
+					</td>
+					<td data-value="Anger Control [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=b139dace57fdc6ea540e9f39775f6b532d443611d226891a69199fad72dec334">Anger Control [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.43">
+						sl0.43
+					</td>
+					<td data-value="1.06">
+						1.06
+					</td>
+					<td data-value="58.47 %">
+						58.47 %
+					</td>
+					<td data-value="97pp">
+						97pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="91">
+						91
+					</td>
+					<td data-value="自強號 -到衛星-">
+						<a href="https://mocha-repository.info/song.php?sha256=c6bf02c779ec7ceff610072132635157e0d89e6e20b4d73f26aa283b4ecf314f">自強號 -到衛星-</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.43">
+						sl0.43
+					</td>
+					<td data-value="1.42">
+						1.42
+					</td>
+					<td data-value="61.44 %">
+						61.44 %
+					</td>
+					<td data-value="97pp">
+						97pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="92">
+						92
+					</td>
+					<td data-value="endemize [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=d6228c0bd343fbef055154d06913c130bf3e8de74f435fa7c351f8982500467f">endemize [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.42">
+						sl0.42
+					</td>
+					<td data-value="1.07">
+						1.07
+					</td>
+					<td data-value="58.80 %">
+						58.80 %
+					</td>
+					<td data-value="97pp">
+						97pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="93">
+						93
+					</td>
+					<td data-value="Stand Up!! Stand Up!! [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=5e574a5fe2a12e6bd658c61d784dbffb01c2c02512412c506dc60bfc31e4f07b">Stand Up!! Stand Up!! [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.42">
+						sl0.42
+					</td>
+					<td data-value="1.74">
+						1.74
+					</td>
+					<td data-value="64.09 %">
+						64.09 %
+					</td>
+					<td data-value="97pp">
+						97pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="94">
+						94
+					</td>
+					<td data-value="Whispers from a Mirror">
+						<a href="https://mocha-repository.info/song.php?sha256=89b0fbacdf914bde7455e826e2f4be17a3b6a913dfb7015cc4bb0db62ec2bbfa">Whispers from a Mirror</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.42">
+						sl0.42
+					</td>
+					<td data-value="2.56">
+						2.56
+					</td>
+					<td data-value="70.32 %">
+						70.32 %
+					</td>
+					<td data-value="97pp">
+						97pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="95">
+						95
+					</td>
+					<td data-value="絶対的共依存-Codependence- [ANOTHER7]">
+						<a href="https://mocha-repository.info/song.php?sha256=3925b2a2e63efc18922c4f342370a2f4b75509c5ca7c2096b312e9f0f59ffbce">絶対的共依存-Codependence- [ANOTHER7]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.41">
+						sl0.41
+					</td>
+					<td data-value="1.06">
+						1.06
+					</td>
+					<td data-value="59.17 %">
+						59.17 %
+					</td>
+					<td data-value="97pp">
+						97pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="96">
+						96
+					</td>
+					<td data-value="gazer [F]">
+						<a href="https://mocha-repository.info/song.php?sha256=17d7d2ab63929e32f2995ba8c78685e0824d1b6b74ceef08752713fee48b6f9d">gazer [F]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.41">
+						sl0.41
+					</td>
+					<td data-value="1.35">
+						1.35
+					</td>
+					<td data-value="61.78 %">
+						61.78 %
+					</td>
+					<td data-value="96pp">
+						96pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="97">
+						97
+					</td>
+					<td data-value="Prismrose [SP ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=236b63fbe1aed678342c362832d931cafd5bf0c7e55b1ef0eb91ae1888ebfe45">Prismrose [SP ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.40">
+						sl0.40
+					</td>
+					<td data-value="1.39">
+						1.39
+					</td>
+					<td data-value="62.70 %">
+						62.70 %
+					</td>
+					<td data-value="96pp">
+						96pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="98">
+						98
+					</td>
+					<td data-value="Bonus Time [ANOTHER]">
+						<a href="https://mocha-repository.info/song.php?sha256=151e524c7d1b6437078ad6d775f2da1d9c8044fc432d0084e0180a710e7e2028">Bonus Time [ANOTHER]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.40">
+						sl0.40
+					</td>
+					<td data-value="1.44">
+						1.44
+					</td>
+					<td data-value="63.16 %">
+						63.16 %
+					</td>
+					<td data-value="96pp">
+						96pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="99">
+						99
+					</td>
+					<td data-value="GAMEBOY [ANOTHER other]">
+						<a href="https://mocha-repository.info/song.php?sha256=73795b87da2b0675dfe90f0008e93b55b94586d33695c8d15c9889274348ca18">GAMEBOY [ANOTHER other]</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="6" class="lamp-hard">
+						Hard
+					</td>
+					<td data-value="sl0.40">
+						sl0.40
+					</td>
+					<td data-value="0.79">
+						0.79
+					</td>
+					<td data-value="57.30 %">
+						57.30 %
+					</td>
+					<td data-value="96pp">
+						96pp
+					</td>
+				</tr>
+		
+				<tr class="chart-row">
+					<td data-value="100">
+						100
+					</td>
+					<td data-value="Out Low">
+						<a href="https://mocha-repository.info/song.php?sha256=6469d642b66ebb6893140fae3083d760da9e728e392ae533342bef4bd588f107">Out Low</a>
+					</td>
+					<td data-value="sl0">
+						sl0
+					</td>
+					<td data-value="4" class="lamp-easy">
+						Easy
+					</td>
+					<td data-value="sl0.39">
+						sl0.39
+					</td>
+					<td data-value="1.30">
+						1.30
+					</td>
+					<td data-value="62.25 %">
+						62.25 %
+					</td>
+					<td data-value="96pp">
+						96pp
+					</td>
+				</tr>
+		</tbody></table></div>
+		<script>
+			function openTab(evt, tabId) {
+				var i, tabcontent, tablinks;
+				tabcontent = document.getElementsByClassName("tabcontent");
+				for (i = 0; i < tabcontent.length; i++) {
+					tabcontent[i].style.display = "none";
+				}
+				tablinks = document.getElementsByClassName("tablinks");
+				for (i = 0; i < tablinks.length; i++) {
+					tablinks[i].className = tablinks[i].className.replace(" active", "");
+				}
+				document.getElementById(tabId).style.display = "block";
+				evt.currentTarget.className += " active";
+			}
+		
+			function applyLampFilter() {
+				const checkboxes = document.querySelectorAll('.lamp-checkbox');
+				const checkedLamps = Array.from(checkboxes)
+										  .filter(cb => cb.checked)
+										  .map(cb => cb.value);
+
+				const rows = document.querySelectorAll('tr.chart-row');
+				
+				rows.forEach(row => {
+					const lampCell = row.cells[3]; 
+					const lampValue = lampCell.getAttribute('data-value');
+					if (checkedLamps.includes(lampValue)) {
+						row.style.display = ""; 
+					} else {
+						row.style.display = "none"; 
+					}
+				});
+			}
+
+			// 全選択/全解除ボタン
+			function toggleLampAll(checked) {
+				const checkboxes = document.querySelectorAll('.lamp-checkbox');
+				checkboxes.forEach(cb => cb.checked = checked);
+				applyLampFilter();
+			}
+
+			var sortState = {};
+
+			function extractNumber(str) {
+				if (!str) return NaN;
+				var cleaned = str.replace(/[^-0-9.]/g, '');
+				var num = parseFloat(cleaned);
+				return num;
+			}
+
+			function sortTable(col, type) {
+				var table = document.getElementById("table");
+				var tbody = table.tBodies[0];
+				var rows = Array.from(tbody.rows);
+
+				var dir = 'asc';
+				if (sortState && sortState.col === col && sortState.dir === 'asc') {
+					dir = 'desc';
+				}
+				sortState = { col: col, dir: dir };
+
+				function getSortValue(row) {
+					var val = row.cells[col].getAttribute("data-value");
+					var isEmpty = (val === null || val === undefined || val.trim() === "");
+					if (type === 'number' || type === 'smart-number') {
+						var num;
+						if (isEmpty) {
+							num = NaN;
+						} else if (type === 'smart-number') {
+							num = extractNumber(val);
+						} else {
+							num = parseFloat(val);
+						}
+						if (isNaN(num)) {
+							return dir === 'asc' ? Number.MAX_VALUE : -Number.MAX_VALUE;
+						}
+						return num;
+					} else {
+						if (isEmpty) return dir === 'asc' ? "￿" : ""; // 文字列のソートで最後尾に行くような文字
+						return val.toLowerCase();
+					}
+				}
+
+				// ソート実行
+				rows.sort(function(a, b) {
+					var valA = getSortValue(a);
+					var valB = getSortValue(b);
+
+					if (valA < valB) return dir === 'asc' ? -1 : 1;
+					if (valA > valB) return dir === 'asc' ? 1 : -1;
+					return 0;
+				});
+
+				tbody.append(...rows);
+			}
+		</script>
+	</body>
+	</html>
+	
